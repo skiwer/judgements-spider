@@ -24,8 +24,17 @@ class Main(Object):
     def task_start(self, tasks):
         run_co_tasks = []
         for task in tasks:
-            run_co_tasks.append(gevent.spawn(Fetch.get_one_page_by_keyword, task[0], task[1]))
+            run_co_tasks.append(gevent.spawn(self.get_one_page, task[0], task[1]))
         gevent.joinall(run_co_tasks)
+
+    def get_one_page(self, keyword, page):
+        task_manager = TaskManager()
+        task_manager.task_begin(keyword, page)
+        res = Fetch.get_one_page_by_keyword(keyword, page)
+        if res:
+            task_manager.task_end(keyword, page)
+        else:
+            task_manager.task_failed(keyword, page)
 
 if __name__ == '__main__':
     main = Main()

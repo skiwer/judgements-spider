@@ -19,6 +19,20 @@ class TaskManager:
                 list.append((k.decode('utf-8'), int(p)))
         return list
 
+    def task_begin(self, keyword, page):
+        md5 = self.get_md5(keyword.encode('utf-8'))
+        self.redis_conn.srem('spider-undo-pages_' + md5, page)
+        self.redis_conn.sadd('spider-running-pages_' + md5, page)
+
+    def task_end(self, keyword, page):
+        md5 = self.get_md5(keyword.encode('utf-8'))
+        self.redis_conn.srem('spider-running-pages_' + md5, page)
+
+    def task_failed(self, keyword, page):
+        md5 = self.get_md5(keyword.encode('utf-8'))
+        self.redis_conn.srem('spider-running-pages_' + md5, page)
+        self.redis_conn.sadd('spider-undo-pages_' + md5, page)
+
     def get_md5(self, s):
         m2 = hashlib.md5()
         m2.update(s)
